@@ -5,6 +5,7 @@ import YourBusiness from '@/components/Home/Section/YourBusiness';
 import AboutSaintHR from '@/components/Home/Section/AboutSaintHR';
 import RecruitmentSolutions from '@/components/Home/Section/RecruitmentSolutions';
 import Testimonial from '@/components/Home/Section/Testimonial';
+import Projects from '@/components/Home/Section/Projects';
 
 export default function Home() {
   return (
@@ -16,6 +17,7 @@ export default function Home() {
       <EmpoweringCareers/>
       <RecruitmentSolutions/>
       <Testimonial/>
+      <Projects/>
     </>
   );
 }
