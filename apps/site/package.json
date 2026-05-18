@@ -1,0 +1,12 @@
+{
+  "name": "@sainthr/site",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt dev --port 3000",
+    "build": "nuxt build",
+    "start": "nuxt preview --port 3000",
+    "lint": "nuxt prepare && eslint . --config eslint.config.mjs",
+    "typecheck": "nuxt typecheck"
+  }
+}

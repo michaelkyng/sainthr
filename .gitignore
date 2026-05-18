@@ -2,6 +2,10 @@
 
 # dependencies
 /node_modules
+/apps/admin/node_modules
+/apps/careers/node_modules
+/apps/site/node_modules
+node_modules.*
 /.pnp
 .pnp.*
 .yarn/*
@@ -13,8 +17,11 @@
 # testing
 /coverage
 
-# next.js
-/.next/
+# nuxt
+/.nuxt/
+/.output/
+**/.nuxt/
+**/.output/
 /out/
 
 # production
@@ -38,4 +45,3 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
