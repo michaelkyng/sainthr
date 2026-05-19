@@ -1,5 +1,6 @@
 export default defineNuxtConfig({
   compatibilityDate: "2026-05-18",
+  extends: ["../../layers/shared-auth", "../../layers/shared-utils"],
   srcDir: "app",
   css: ["~/assets/css/main.css"],
   devtools: { enabled: true },

@@ -6,7 +6,7 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "bun run dev:site",
+    "dev": "bun --filter='@sainthr/*' run dev",
     "dev:site": "bun --filter=@sainthr/site run dev",
     "dev:careers": "bun --filter=@sainthr/careers run dev",
     "dev:admin": "bun --filter=@sainthr/admin run dev",

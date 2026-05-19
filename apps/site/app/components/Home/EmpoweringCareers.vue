@@ -35,7 +35,7 @@ const listItems = [
             v-reveal="i * 80 + 300"
             class="flex gap-3 rounded-xl bg-white/70 p-3 font-display text-sm font-medium text-primary shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md md:text-base"
           >
-            <Sparkle class="size-5 shrink-0 text-emerald-600" :stroke-width="1.5" />
+            <Sparkle class="size-5 shrink-0 text-primary/60" :stroke-width="1.5" />
             <span>{{ item }}</span>
           </li>
         </ul>

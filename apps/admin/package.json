@@ -8,5 +8,12 @@
     "start": "nuxt preview --port 3002",
     "lint": "nuxt prepare && eslint . --config eslint.config.mjs",
     "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "reka-ui": "^2.9.7",
+    "shadcn-nuxt": "^2.7.3",
+    "tailwind-merge": "^3.6.0"
   }
 }

@@ -24,13 +24,13 @@ const popularSearches = ["HR Manager", "Remote", "Payroll", "Recruitment", "Comp
   <section class="careers-hero-bg flex min-h-[calc(100vh-80px)] items-center justify-center px-5 pb-20 pt-10 text-center lg:px-8">
     <div class="mx-auto w-full max-w-3xl">
       <div class="c-anim-1 mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-panel/80 px-4 py-2 text-sm font-semibold text-muted shadow-sm backdrop-blur">
-        <span class="size-1.5 rounded-full bg-green" />
+        <span class="size-1.5 rounded-full bg-ink/40" />
         Trusted by 150+ employers across Nigeria
       </div>
 
       <h1 class="c-anim-2 font-display text-5xl font-semibold leading-[1.1] text-ink md:text-6xl lg:text-7xl">
         Find the right role,<br>
-        <span class="text-green">right now.</span>
+        <span class="text-[#3b55c4]">right now.</span>
       </h1>
 
       <p class="c-anim-3 mx-auto mt-5 max-w-xl text-base leading-7 text-muted md:text-lg">
