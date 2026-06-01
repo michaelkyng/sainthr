@@ -18,15 +18,20 @@ const handleSearch = () => {
 }
 
 const popularSearches = ["HR Manager", "Remote", "Payroll", "Recruitment", "Compliance"]
+
+const useSearchTerm = (term: string) => {
+  searchQuery.value = term
+  handleSearch()
+}
 </script>
 
 <template>
   <section class="careers-hero-bg flex min-h-[calc(100vh-80px)] items-center justify-center px-5 pb-20 pt-10 text-center lg:px-8">
     <div class="mx-auto w-full max-w-3xl">
-      <div class="c-anim-1 mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-panel/80 px-4 py-2 text-sm font-semibold text-muted shadow-sm backdrop-blur">
+      <UiBadge variant="outline" class="c-anim-1 mb-6 bg-panel/80 px-4 py-2 text-sm text-muted shadow-sm backdrop-blur">
         <span class="size-1.5 rounded-full bg-ink/40" />
         Trusted by 150+ employers across Nigeria
-      </div>
+      </UiBadge>
 
       <h1 class="c-anim-2 font-display text-5xl font-semibold leading-[1.1] text-ink md:text-6xl lg:text-7xl">
         Find the right role,<br>
@@ -60,28 +65,25 @@ const popularSearches = ["HR Manager", "Remote", "Payroll", "Recruitment", "Comp
             @keyup.enter="handleSearch"
           >
         </div>
-        <button
-          class="flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-ink-2 sm:px-6"
-          type="button"
-          @click="handleSearch"
-        >
+        <UiButton class="px-5 sm:px-6" @click="handleSearch">
           <Search class="size-4" />
           <span class="hidden sm:inline">Search Jobs</span>
-        </button>
+        </UiButton>
       </div>
 
       <!-- Popular searches -->
       <div class="c-anim-5 mt-5 flex flex-wrap items-center justify-center gap-2">
         <span class="text-xs font-semibold text-muted">Popular:</span>
-        <button
+        <UiButton
           v-for="term in popularSearches"
           :key="term"
-          class="rounded-full border border-line bg-panel/80 px-3.5 py-1.5 text-xs font-semibold text-muted transition-all duration-200 hover:border-ink/30 hover:bg-paper hover:text-ink"
-          type="button"
-          @click="() => { searchQuery = term; handleSearch() }"
+          variant="secondary"
+          size="sm"
+          class="bg-panel/80"
+          @click="useSearchTerm(term)"
         >
           {{ term }}
-        </button>
+        </UiButton>
       </div>
     </div>
   </section>

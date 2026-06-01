@@ -14,9 +14,10 @@ withDefaults(
 </script>
 
 <template>
-  <article
+  <UiCard
+    variant="panel"
     :class="[
-      'group flex flex-col gap-4 rounded-2xl border border-line bg-panel p-5 transition-all duration-300 hover:-translate-y-1 hover:border-ink/20 hover:shadow-[0_20px_60px_rgba(16,30,68,0.1)]',
+      'group flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1 hover:border-ink/20 hover:shadow-[0_20px_60px_rgba(16,30,68,0.1)]',
       variant === 'featured' ? 'p-6' : 'p-5',
     ]"
   >
@@ -24,19 +25,18 @@ withDefaults(
       <div class="flex size-12 items-center justify-center rounded-xl bg-paper text-ink">
         <Building2 class="size-5" />
       </div>
-      <span
-        v-if="job.matchScore"
-        :class="['rounded-full px-3 py-1 text-xs font-semibold', job.accent]"
-      >
+      <UiBadge v-if="job.matchScore" :class="job.accent">
         {{ job.matchScore }}% match
-      </span>
+      </UiBadge>
     </div>
 
     <div class="flex flex-col gap-1">
       <h3 :class="['font-display font-semibold text-ink transition-colors group-hover:text-green', variant === 'featured' ? 'text-xl' : 'text-lg']">
         {{ job.title }}
       </h3>
-      <p class="text-sm text-muted">{{ job.company }}</p>
+      <p class="text-sm text-muted">
+        {{ job.company }}
+      </p>
     </div>
 
     <div class="flex flex-wrap items-center gap-3 text-xs text-muted">
@@ -48,38 +48,42 @@ withDefaults(
         <Clock3 class="size-3.5" />
         {{ job.type }}
       </span>
-      <span
-        :class="[
-          'rounded-full px-2 py-0.5 text-xs font-semibold capitalize',
-          job.locationType === 'remote' ? 'bg-mint text-green' : job.locationType === 'hybrid' ? 'bg-[#e8eeff] text-[#3b55c4]' : 'bg-paper text-muted',
-        ]"
-      >
+      <UiBadge :class="`px-2 py-0.5 capitalize ${JOB_LOCATION_TYPE_COLORS[job.locationType]}`">
         {{ job.locationType }}
-      </span>
+      </UiBadge>
     </div>
 
     <div class="flex flex-wrap gap-1.5">
-      <span
+      <UiBadge
         v-for="skill in job.skills.slice(0, 3)"
         :key="skill"
-        class="rounded-full border border-line bg-paper px-2.5 py-1 text-xs font-medium text-muted"
+        variant="outline"
+        class="bg-paper px-2.5 py-1 font-medium"
       >
         {{ skill }}
-      </span>
+      </UiBadge>
     </div>
 
     <div class="mt-auto flex items-center justify-between border-t border-line pt-4">
       <div>
-        <p class="font-display text-base font-semibold text-ink">{{ job.salary }}</p>
-        <p class="text-xs text-muted">{{ job.postedDaysAgo === 0 ? "Today" : `${job.postedDaysAgo}d ago` }}</p>
+        <p class="font-display text-base font-semibold text-ink">
+          {{ job.salary }}
+        </p>
+        <p class="text-xs text-muted">
+          {{ job.postedDaysAgo === 0 ? "Today" : `${job.postedDaysAgo}d ago` }}
+        </p>
       </div>
-      <NuxtLink
-        :to="`/jobs/${job.id}`"
-        class="flex items-center gap-1.5 rounded-full bg-paper px-4 py-2 text-xs font-semibold text-ink transition-all duration-200 hover:bg-ink hover:text-white"
+      <UiButton
+        as-child
+        variant="secondary"
+        size="sm"
+        class="bg-paper group-hover:border-ink group-hover:bg-ink group-hover:text-white"
       >
-        View role
-        <ArrowUpRight class="size-3.5" />
-      </NuxtLink>
+        <NuxtLink :to="`/jobs/${job.id}`">
+          View role
+          <ArrowUpRight class="size-3.5" />
+        </NuxtLink>
+      </UiButton>
     </div>
-  </article>
+  </UiCard>
 </template>

@@ -1,22 +1,18 @@
 <script setup lang="ts">
-import { ChevronDown, LayoutDashboard, Plus } from "@lucide/vue"
+import { ChevronDown, Plus } from '@lucide/vue';
 
-defineOptions({ name: "CompanyLayout" })
+defineOptions({ name: 'CompanyLayout' });
 
-const { employer, activeCompany, companyInitials, setActiveCompany } = useCompany()
-const router = useRouter()
+const employerStore = useEmployerStore();
+const { employer, activeCompany, companyInitials } = storeToRefs(employerStore);
+const { setActiveCompany } = employerStore;
 
-onMounted(() => {
-  if (!employer.value.fullName) router.push("/auth/signup?role=employer")
-  else if (!employer.value.isOnboarded) router.push("/company/onboarding")
-})
-
-const ddOpen = ref(false)
+const ddOpen = ref(false);
 
 const switchCompany = (id: string) => {
-  setActiveCompany(id)
-  ddOpen.value = false
-}
+  setActiveCompany(id);
+  ddOpen.value = false;
+};
 </script>
 
 <template>
@@ -24,22 +20,49 @@ const switchCompany = (id: string) => {
     <AppNavbar />
     <main class="flex-1 pt-20">
       <!-- Company subheader -->
-      <div class="sticky top-20 z-40 border-b border-line bg-white/95 backdrop-blur-sm">
-        <div class="mx-auto flex max-w-6xl items-center justify-between px-5 py-3 lg:px-8">
+      <div
+        class="sticky top-20 z-40 backdrop-blur-sm"
+      >
+        <div
+          class="mx-auto flex max-w-6xl items-center justify-between px-5 py-3 lg:px-8"
+        >
           <!-- Company selector -->
           <div class="relative z-50">
             <button
-              class="flex items-center gap-2.5 rounded-full py-1.5 pl-1.5 pr-3 text-sm font-semibold text-ink transition hover:bg-paper"
+              class="flex items-baseline gap-2.5 rounded-full py-1.5 px-3 text-sm font-semibold text-ink transition bg-white/90 hover:bg-paper cursor-pointer"
               type="button"
               @click="ddOpen = !ddOpen"
             >
-              <div class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-ink font-display text-[11px] font-bold text-white">
+              <div
+                class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-ink font-display text-[11px] font-bold text-white"
+              >
                 {{ companyInitials }}
               </div>
-              <span class="max-w-35 truncate">{{ activeCompany?.name ?? "My Company" }}</span>
-              <ChevronDown
-                :class="['size-3.5 text-muted transition-transform duration-200', ddOpen ? 'rotate-180' : '']"
-              />
+              <div class="flex gap-2 items-center">
+                <div class="flex flex-col items-start">
+                  <span class="max-w-35 truncate text-base">{{
+                    activeCompany?.name ?? 'My Company'
+                  }}</span>
+                  <p class=" text-xs text-muted">
+                    {{ activeCompany?.industry }}
+                    <template
+                      v-if="activeCompany?.industry && activeCompany?.location"
+                    >
+                      ·
+                    </template>
+                    {{ activeCompany?.location }}
+                    <template v-if="activeCompany?.size">
+                      · {{ activeCompany.size }} employees</template
+                    >
+                  </p>
+                </div>
+                <ChevronDown
+                  :class="[
+                    'size-3.5 text-muted transition-transform duration-200',
+                    ddOpen ? 'rotate-180' : '',
+                  ]"
+                />
+              </div>
             </button>
 
             <!-- Dropdown -->
@@ -56,7 +79,9 @@ const switchCompany = (id: string) => {
                 class="absolute left-0 top-full mt-2 w-60 overflow-hidden rounded-2xl border border-line bg-white shadow-[0_12px_40px_rgba(16,30,68,0.14)]"
               >
                 <div class="p-1.5">
-                  <p class="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-muted/60">
+                  <p
+                    class="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-muted/60"
+                  >
                     Your companies
                   </p>
                   <button
@@ -69,16 +94,32 @@ const switchCompany = (id: string) => {
                     <div
                       :class="[
                         'flex size-7 shrink-0 items-center justify-center rounded-lg font-display text-[11px] font-bold transition',
-                        c.id === activeCompany?.id ? 'bg-ink text-white' : 'bg-paper text-ink',
+                        c.id === activeCompany?.id
+                          ? 'bg-ink text-white'
+                          : 'bg-paper text-ink',
                       ]"
                     >
-                      {{ c.name.split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase()).join('') }}
+                      {{
+                        c.name
+                          .split(/\s+/)
+                          .slice(0, 2)
+                          .map((w) => w[0]?.toUpperCase())
+                          .join('')
+                      }}
                     </div>
                     <div class="min-w-0 flex-1">
-                      <p class="truncate text-sm font-semibold text-ink">{{ c.name }}</p>
-                      <p class="text-xs text-muted">{{ c.jobs.filter(j => j.status === 'active').length }} active jobs</p>
+                      <p class="truncate text-sm font-semibold text-ink">
+                        {{ c.name }}
+                      </p>
+                      <p class="text-xs text-muted">
+                        {{ c.jobs.filter((j) => j.status === 'active').length }}
+                        active jobs
+                      </p>
                     </div>
-                    <span v-if="c.id === activeCompany?.id" class="size-1.5 shrink-0 rounded-full bg-green" />
+                    <span
+                      v-if="c.id === activeCompany?.id"
+                      class="size-1.5 shrink-0 rounded-full bg-ink"
+                    />
                   </button>
                 </div>
                 <div class="border-t border-line p-1.5">
@@ -97,14 +138,6 @@ const switchCompany = (id: string) => {
           <!-- Subheader nav -->
           <nav class="flex items-center gap-1">
             <NuxtLink
-              to="/company/dashboard"
-              active-class="bg-paper! text-ink!"
-              class="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-ink/60 transition hover:bg-paper hover:text-ink"
-            >
-              <LayoutDashboard class="size-3.5" />
-              <span class="hidden sm:inline">Dashboard</span>
-            </NuxtLink>
-            <NuxtLink
               to="/company/jobs/post"
               class="flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-xs font-semibold text-white transition hover:bg-ink-2"
             >
@@ -118,11 +151,7 @@ const switchCompany = (id: string) => {
     </main>
 
     <!-- Backdrop for dropdown -->
-    <div
-      v-if="ddOpen"
-      class="fixed inset-0 z-39"
-      @click="ddOpen = false"
-    />
+    <div v-if="ddOpen" class="fixed inset-0 z-39" @click="ddOpen = false" />
 
     <AppFooter />
   </div>

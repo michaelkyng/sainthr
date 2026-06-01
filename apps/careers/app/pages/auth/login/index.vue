@@ -2,16 +2,20 @@
 import { ArrowLeft } from "@lucide/vue"
 
 defineOptions({ name: "CareersLoginPage" })
-definePageMeta({ layout: "auth" })
+definePageMeta({ layout: "auth", middleware: "guest" })
 
 useHead({ title: "Sign in – SaintHR Careers" })
 
-const router = useRouter()
+const route = useRoute()
+const redirectUrl = computed(() => {
+  const target = route.query.redirect_url
+  return typeof target === "string" && target.startsWith("/") ? target : "/jobs"
+})
 </script>
 
 <template>
   <div class="w-full max-w-md">
-    <AuthLoginForm @submit="router.push('/jobs')">
+    <AuthLoginForm :redirect-url="redirectUrl">
       <p class="mt-6 text-center text-sm text-muted">
         New to SaintHR?
         <NuxtLink to="/auth/signup" class="font-semibold text-ink transition hover:text-green">
@@ -20,11 +24,10 @@ const router = useRouter()
       </p>
     </AuthLoginForm>
 
-    <NuxtLink
-      to="/jobs"
-      class="mt-4 flex items-center justify-center gap-1.5 text-sm font-semibold text-muted transition hover:text-ink"
-    >
-      <ArrowLeft class="size-4" /> Back to jobs
-    </NuxtLink>
+    <UiButton as-child variant="ghost" size="sm" class="mt-4 w-full">
+      <NuxtLink to="/jobs">
+        <ArrowLeft class="size-4" /> Back to jobs
+      </NuxtLink>
+    </UiButton>
   </div>
 </template>

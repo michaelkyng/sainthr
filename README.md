@@ -7,13 +7,20 @@ SaintHR is a Nuxt 4 landing page for HR services.
 Install dependencies:
 
 ```bash
-pnpm install
+bun install
+```
+
+Add the Clerk keys for the shared auth layer to your local `.env`:
+
+```bash
+NUXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+NUXT_CLERK_SECRET_KEY=sk_test_...
 ```
 
 Run the development server:
 
 ```bash
-pnpm dev
+bun dev
 ```
 
 Open http://localhost:3000 in your browser.
@@ -21,8 +28,8 @@ Open http://localhost:3000 in your browser.
 ## Scripts
 
 ```bash
-pnpm build
-pnpm start
-pnpm lint
-pnpm typecheck
+bun build
+bun start
+bun lint
+bun typecheck
 ```

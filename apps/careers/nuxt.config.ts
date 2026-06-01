@@ -7,7 +7,7 @@ export default defineNuxtConfig({
   dir: {
     public: "../../public",
   },
-  modules: ["@nuxt/eslint"],
+  modules: ["@nuxt/eslint", "@pinia/nuxt", "pinia-plugin-persistedstate/nuxt"],
   postcss: {
     plugins: {
       "@tailwindcss/postcss": {},
