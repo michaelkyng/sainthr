@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowUpRight, BriefcaseBusiness, LayoutDashboard, LogOut, Menu, Settings, UserRound, X } from "@lucide/vue"
+import { ArrowUpRight, BriefcaseBusiness, Building2, Check, LayoutDashboard, LogOut, Menu, Settings, UserRound, X } from "@lucide/vue"
 
 defineOptions({ name: "CareersAppNavbar" })
 
@@ -10,7 +10,10 @@ const { profile } = storeToRefs(useProfileStore())
 const { employer } = storeToRefs(useEmployerStore())
 const {
   isSignedIn,
-  role,
+  roles,
+  activeRole,
+  setActiveRole,
+  homeFor,
   fullName,
   email,
   user,
@@ -19,7 +22,15 @@ const {
   isEmployerOnboarded,
 } = useSharedAuth()
 
-const showEmployerNav = computed(() => isSignedIn.value && role.value === "employer")
+const showEmployerNav = computed(() => isSignedIn.value && activeRole.value === "employer")
+
+const ROLE_LABELS: Record<string, string> = { candidate: "Job Seeker", employer: "Employer" }
+
+const switchRole = async (r: "candidate" | "employer") => {
+  mobileOpen.value = false
+  setActiveRole(r)
+  await navigateTo(homeFor(r))
+}
 const employerDestination = computed(() => (
   isEmployerOnboarded.value ? "/company/dashboard" : "/company/onboarding"
 ))
@@ -141,6 +152,21 @@ const handleSignOut = async () => {
                   <Settings class="size-4 text-ink/60" />
                   Settings
                 </UiDropdownMenuItem>
+                <template v-if="roles.length > 1">
+                  <UiDropdownMenuSeparator />
+                  <p class="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink/40">
+                    Switch role
+                  </p>
+                  <UiDropdownMenuItem
+                    v-for="r in roles"
+                    :key="r"
+                    @click="switchRole(r)"
+                  >
+                    <component :is="r === 'employer' ? Building2 : UserRound" class="size-4 text-ink/60" />
+                    {{ ROLE_LABELS[r] }}
+                    <Check v-if="activeRole === r" class="ml-auto size-3.5 text-green" />
+                  </UiDropdownMenuItem>
+                </template>
                 <UiDropdownMenuSeparator />
                 <UiDropdownMenuItem :destructive="true" @click="handleSignOut">
                   <LogOut class="size-4" />
@@ -224,6 +250,23 @@ const handleSignOut = async () => {
             >
               <Settings class="size-4 text-ink/60" /> Settings
             </NuxtLink>
+            <template v-if="roles.length > 1">
+              <div class="my-1 border-t border-line" />
+              <p class="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink/40">
+                Switch view
+              </p>
+              <button
+                v-for="r in roles"
+                :key="r"
+                type="button"
+                class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-ink transition hover:bg-paper"
+                @click="switchRole(r)"
+              >
+                <component :is="r === 'employer' ? Building2 : UserRound" class="size-4 text-ink/60" />
+                {{ ROLE_LABELS[r] }}
+                <Check v-if="activeRole === r" class="ml-auto size-3.5 text-green" />
+              </button>
+            </template>
             <button
               type="button"
               class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-coral transition hover:bg-coral/10"

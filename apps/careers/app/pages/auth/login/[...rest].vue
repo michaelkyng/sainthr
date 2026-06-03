@@ -7,6 +7,6 @@ useHead({ title: "Sign in – SaintHR Careers" })
 
 <template>
   <div class="w-full max-w-md">
-    <AuthLoginForm redirect-url="/jobs" />
+    <AuthLoginForm redirect-url="/auth/continue" />
   </div>
 </template>

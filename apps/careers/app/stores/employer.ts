@@ -82,10 +82,10 @@ const defaultEmployerSettings = (): EmployerSettings => ({
 export const useEmployerStore = defineStore("employer", () => {
   const employer = ref<Employer>(defaultEmployer())
   const settings = ref<EmployerSettings>(defaultEmployerSettings())
-  const { email, fullName, role } = useSharedAuth()
+  const { email, fullName, activeRole } = useSharedAuth()
 
   watchEffect(() => {
-    if (role.value !== "employer") return
+    if (activeRole.value !== "employer") return
     if (!employer.value.fullName && fullName.value) employer.value.fullName = fullName.value
     if (!employer.value.email && email.value) employer.value.email = email.value
   })

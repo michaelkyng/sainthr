@@ -7,9 +7,14 @@ definePageMeta({ layout: "auth", middleware: "guest" })
 useHead({ title: "Sign in – SaintHR Careers" })
 
 const route = useRoute()
+// Always land on /auth/continue so the role context resolves (and the backend
+// bootstrap runs) before routing. Carry the original deep link along.
 const redirectUrl = computed(() => {
   const target = route.query.redirect_url
-  return typeof target === "string" && target.startsWith("/") ? target : "/jobs"
+  const safe = typeof target === "string" && target.startsWith("/") ? target : null
+  return safe
+    ? `/auth/continue?redirect_url=${encodeURIComponent(safe)}`
+    : "/auth/continue"
 })
 </script>
 

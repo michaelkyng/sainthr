@@ -19,9 +19,7 @@ onMounted(() => {
   role.value = fromQuery ?? fromStorage ?? "candidate"
 })
 
-const redirectUrl = computed(() => (
-  role.value === "employer" ? "/company/onboarding" : "/onboarding"
-))
+const redirectUrl = computed(() => `/auth/continue?role=${role.value}`)
 </script>
 
 <template>

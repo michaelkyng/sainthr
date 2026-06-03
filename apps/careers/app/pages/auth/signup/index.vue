@@ -27,9 +27,9 @@ watch(role, (next) => {
   else sessionStorage.removeItem(SIGNUP_ROLE_KEY)
 })
 
-const redirectUrl = computed(() => (
-  role.value === "employer" ? "/company/onboarding" : "/onboarding"
-))
+// Route through /auth/continue so the backend can promote the signup role hint
+// into an authoritative role before we land on the role's home.
+const redirectUrl = computed(() => `/auth/continue?role=${role.value ?? "candidate"}`)
 
 const ROLES = [
   {

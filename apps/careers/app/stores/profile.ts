@@ -67,10 +67,10 @@ const defaultSettings = (): CandidateSettings => ({
 export const useProfileStore = defineStore("profile", () => {
   const profile = ref<UserProfile>(defaultProfile())
   const settings = ref<CandidateSettings>(defaultSettings())
-  const { email, fullName, role } = useSharedAuth()
+  const { email, fullName, activeRole } = useSharedAuth()
 
   watchEffect(() => {
-    if (role.value && role.value !== "candidate") return
+    if (activeRole.value && activeRole.value !== "candidate") return
     if (!profile.value.fullName && fullName.value) profile.value.fullName = fullName.value
     if (!profile.value.email && email.value) profile.value.email = email.value
   })

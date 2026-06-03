@@ -1,11 +1,7 @@
+// Universal: runs server-side during SSR (redirect before any HTML is sent —
+// no flash) and again client-side for in-app navigations.
 export default defineNuxtRouteMiddleware(async (to) => {
-  const auth = await ensureAuthReady()
-  if (!auth) return
-
-  if (!auth.isSignedIn.value) {
-    return navigateTo({
-      path: "/auth/login",
-      query: { redirect_url: to.fullPath },
-    })
-  }
+  const snap = await getAccessSnapshot()
+  const redirect = guardAuthed(snap, to.fullPath)
+  if (redirect) return navigateTo(redirect)
 })
