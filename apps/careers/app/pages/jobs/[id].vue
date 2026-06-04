@@ -24,7 +24,7 @@ const relatedJobs = computed(() =>
 )
 
 const saved = ref(false)
-const applied = ref(false)
+const applyHref = computed(() => job.value ? `/jobs/${job.value.id}/apply` : "/jobs")
 
 useHead(() => ({
   title: job.value ? `${job.value.title} at ${job.value.company} – SaintHR Careers` : "Job Not Found",
@@ -34,14 +34,17 @@ useHead(() => ({
 <template>
   <div>
     <div v-if="!job" class="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-      <p class="font-display text-2xl font-semibold text-ink">Job not found</p>
-      <p class="text-muted">This role may have been filled or removed.</p>
-      <NuxtLink
-        to="/jobs"
-        class="flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-ink-2"
-      >
-        <ArrowLeft class="size-4" /> Back to jobs
-      </NuxtLink>
+      <p class="font-display text-2xl font-semibold text-ink">
+        Job not found
+      </p>
+      <p class="text-muted">
+        This role may have been filled or removed.
+      </p>
+      <UiButton as-child class="px-5">
+        <NuxtLink to="/jobs">
+          <ArrowLeft class="size-4" /> Back to jobs
+        </NuxtLink>
+      </UiButton>
     </div>
 
     <div v-else>
@@ -68,10 +71,12 @@ useHead(() => ({
                   <Building2 class="size-7" />
                 </div>
                 <div>
-                  <p class="text-sm font-semibold text-muted">{{ job.company }}</p>
-                  <span v-if="job.matchScore" :class="['mt-1 inline-flex rounded-full px-3 py-1 text-xs font-semibold', job.accent]">
+                  <p class="text-sm font-semibold text-muted">
+                    {{ job.company }}
+                  </p>
+                  <UiBadge v-if="job.matchScore" :class="`mt-1 ${job.accent}`">
                     {{ job.matchScore }}% profile match
-                  </span>
+                  </UiBadge>
                 </div>
               </div>
 
@@ -93,59 +98,44 @@ useHead(() => ({
                   <CalendarDays class="size-4" />
                   {{ job.postedDaysAgo === 0 ? "Posted today" : `Posted ${job.postedDaysAgo}d ago` }}
                 </span>
-                <span
-                  :class="[
-                    'rounded-full px-3 py-1 text-xs font-semibold capitalize',
-                    job.locationType === 'remote' ? 'bg-mint text-green' : job.locationType === 'hybrid' ? 'bg-[#e8eeff] text-[#3b55c4]' : 'bg-paper text-muted',
-                  ]"
-                >
+                <UiBadge :class="`capitalize ${JOB_LOCATION_TYPE_COLORS[job.locationType]}`">
                   {{ job.locationType }}
-                </span>
+                </UiBadge>
               </div>
 
               <div class="flex flex-wrap gap-1.5">
-                <span
+                <UiBadge
                   v-for="skill in job.skills"
                   :key="skill"
-                  class="rounded-full border border-line bg-paper px-3 py-1 text-xs font-semibold text-muted"
+                  variant="outline"
+                  class="bg-paper"
                 >
                   {{ skill }}
-                </span>
+                </UiBadge>
               </div>
             </div>
 
             <!-- Action buttons (desktop) -->
             <div class="hidden flex-col gap-3 lg:flex lg:min-w-52">
-              <button
-                :class="[
-                  'flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition-all duration-200',
-                  applied ? 'bg-green text-white' : 'bg-ink text-white hover:bg-ink-2',
-                ]"
-                type="button"
-                @click="applied = true"
-              >
-                <CheckCircle2 v-if="applied" class="size-4" />
-                <ArrowUpRight v-else class="size-4" />
-                {{ applied ? "Applied!" : "Apply now" }}
-              </button>
-              <button
-                :class="[
-                  'flex w-full items-center justify-center gap-2 rounded-full border px-6 py-3.5 text-sm font-semibold transition-all duration-200',
-                  saved ? 'border-green bg-mint text-green' : 'border-line bg-paper text-muted hover:border-ink/30 hover:text-ink',
-                ]"
-                type="button"
+              <UiButton as-child size="lg" class="w-full">
+                <NuxtLink :to="applyHref">
+                  <ArrowUpRight class="size-4" /> Apply now
+                </NuxtLink>
+              </UiButton>
+              <UiButton
+                size="lg"
+                class="w-full"
+                :variant="saved ? 'default' : 'secondary'"
+                :class="saved ? 'border-ink/30 bg-ink/5 text-ink hover:bg-ink/5' : 'bg-paper'"
                 @click="saved = !saved"
               >
                 <BookmarkPlus class="size-4" />
                 {{ saved ? "Saved" : "Save job" }}
-              </button>
-              <button
-                class="flex w-full items-center justify-center gap-2 rounded-full border border-line bg-paper px-6 py-3 text-sm font-semibold text-muted transition-all duration-200 hover:border-ink/30 hover:text-ink"
-                type="button"
-              >
+              </UiButton>
+              <UiButton variant="secondary" size="lg" class="w-full bg-paper">
                 <Share2 class="size-4" />
                 Share
-              </button>
+              </UiButton>
             </div>
           </div>
         </div>
@@ -157,12 +147,18 @@ useHead(() => ({
           <!-- Left: job details -->
           <div class="flex flex-col gap-10">
             <section>
-              <h2 class="mb-4 font-display text-xl font-semibold text-ink">About the role</h2>
-              <p class="leading-7 text-muted">{{ job.description }}</p>
+              <h2 class="mb-4 font-display text-xl font-semibold text-ink">
+                About the role
+              </h2>
+              <p class="leading-7 text-muted">
+                {{ job.description }}
+              </p>
             </section>
 
             <section>
-              <h2 class="mb-4 font-display text-xl font-semibold text-ink">Responsibilities</h2>
+              <h2 class="mb-4 font-display text-xl font-semibold text-ink">
+                Responsibilities
+              </h2>
               <ul class="flex flex-col gap-3">
                 <li
                   v-for="item in job.responsibilities"
@@ -176,7 +172,9 @@ useHead(() => ({
             </section>
 
             <section>
-              <h2 class="mb-4 font-display text-xl font-semibold text-ink">Requirements</h2>
+              <h2 class="mb-4 font-display text-xl font-semibold text-ink">
+                Requirements
+              </h2>
               <ul class="flex flex-col gap-3">
                 <li
                   v-for="item in job.requirements"
@@ -190,7 +188,9 @@ useHead(() => ({
             </section>
 
             <section>
-              <h2 class="mb-4 font-display text-xl font-semibold text-ink">Benefits</h2>
+              <h2 class="mb-4 font-display text-xl font-semibold text-ink">
+                Benefits
+              </h2>
               <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 <div
                   v-for="benefit in job.benefits"
@@ -198,21 +198,29 @@ useHead(() => ({
                   class="flex items-start gap-3 rounded-xl border border-line bg-panel p-4"
                 >
                   <span class="mt-0.5 size-1.5 shrink-0 rounded-full bg-green" />
-                  <p class="text-sm leading-6 text-muted">{{ benefit }}</p>
+                  <p class="text-sm leading-6 text-muted">
+                    {{ benefit }}
+                  </p>
                 </div>
               </div>
             </section>
 
-            <section class="rounded-2xl border border-line bg-panel p-6">
-              <h2 class="mb-3 font-display text-xl font-semibold text-ink">About {{ job.company }}</h2>
-              <p class="text-sm leading-7 text-muted">{{ job.companyDescription }}</p>
-            </section>
+            <UiCard variant="panel" class="p-6">
+              <h2 class="mb-3 font-display text-xl font-semibold text-ink">
+                About {{ job.company }}
+              </h2>
+              <p class="text-sm leading-7 text-muted">
+                {{ job.companyDescription }}
+              </p>
+            </UiCard>
           </div>
 
           <!-- Right: sticky sidebar -->
           <div class="flex flex-col gap-4 lg:sticky lg:top-24 lg:h-fit">
-            <div class="rounded-2xl border border-line bg-panel p-6">
-              <h3 class="mb-4 font-display text-lg font-semibold text-ink">Job overview</h3>
+            <UiCard variant="panel" class="p-6">
+              <h3 class="mb-4 font-display text-lg font-semibold text-ink">
+                Job overview
+              </h3>
               <ul class="flex flex-col gap-3 text-sm">
                 <li class="flex items-center justify-between gap-4 border-b border-line pb-3">
                   <span class="text-muted">Salary</span>
@@ -237,42 +245,40 @@ useHead(() => ({
               </ul>
 
               <div class="mt-5 flex flex-col gap-2.5">
-                <button
-                  :class="[
-                    'flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition-all duration-200',
-                    applied ? 'bg-green text-white' : 'bg-ink text-white hover:bg-ink-2',
-                  ]"
-                  type="button"
-                  @click="applied = true"
-                >
-                  <CheckCircle2 v-if="applied" class="size-4" />
-                  <ArrowUpRight v-else class="size-4" />
-                  {{ applied ? "Application sent!" : "Apply now" }}
-                </button>
-                <button
-                  :class="[
-                    'flex w-full items-center justify-center gap-2 rounded-full border px-6 py-3 text-sm font-semibold transition-all duration-200',
-                    saved ? 'border-green bg-mint text-green' : 'border-line bg-paper text-muted hover:border-ink/30 hover:text-ink',
-                  ]"
-                  type="button"
+                <UiButton as-child size="lg" class="w-full">
+                  <NuxtLink :to="applyHref">
+                    <ArrowUpRight class="size-4" /> Apply now
+                  </NuxtLink>
+                </UiButton>
+                <UiButton
+                  size="lg"
+                  class="w-full"
+                  :variant="saved ? 'default' : 'secondary'"
+                  :class="saved ? 'border-ink/30 bg-ink/5 text-ink hover:bg-ink/5' : 'bg-paper'"
                   @click="saved = !saved"
                 >
                   <BookmarkPlus class="size-4" />
                   {{ saved ? "Saved" : "Save job" }}
-                </button>
+                </UiButton>
               </div>
-            </div>
+            </UiCard>
 
-            <div class="rounded-2xl border border-line bg-mint/40 p-5 text-sm">
-              <p class="font-semibold text-green">Vetted by SaintHR</p>
-              <p class="mt-1 leading-6 text-muted">All roles on SaintHR are screened by our HR team for quality, compliance, and authenticity.</p>
-            </div>
+            <UiCard variant="panel" class="border-line/0 bg-mint/40 p-5 text-sm">
+              <p class="font-semibold text-green">
+                Vetted by SaintHR
+              </p>
+              <p class="mt-1 leading-6 text-muted">
+                All roles on SaintHR are screened by our HR team for quality, compliance, and authenticity.
+              </p>
+            </UiCard>
           </div>
         </div>
 
         <!-- Related jobs -->
         <div v-if="relatedJobs.length" class="mt-16">
-          <h2 class="mb-6 font-display text-2xl font-semibold text-ink">Similar roles</h2>
+          <h2 class="mb-6 font-display text-2xl font-semibold text-ink">
+            Similar roles
+          </h2>
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             <JobsJobCard v-for="relJob in relatedJobs" :key="relJob.id" :job="relJob" />
           </div>

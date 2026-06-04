@@ -6,7 +6,7 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "bun run dev:site",
+    "dev": "bun --filter='@sainthr/*' run dev",
     "dev:site": "bun --filter=@sainthr/site run dev",
     "dev:careers": "bun --filter=@sainthr/careers run dev",
     "dev:admin": "bun --filter=@sainthr/admin run dev",
@@ -34,8 +34,12 @@
     "add:admin:dev": "bun add -d --filter=@sainthr/admin"
   },
   "dependencies": {
+    "@clerk/nuxt": "^2.4.6",
     "@lucide/vue": "^1.16.0",
+    "@pinia/nuxt": "^0.11.3",
     "nuxt": "^4.4.4",
+    "pinia": "^3.0.4",
+    "pinia-plugin-persistedstate": "^4.7.1",
     "vue": "^3.5.24"
   },
   "devDependencies": {

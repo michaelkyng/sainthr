@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@source "../../../../../layers";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -103,7 +104,7 @@
   --secondary-foreground: oklch(0.208 0.042 265.755);
   --muted: oklch(0.94 0.012 251.46);
   --muted-foreground: oklch(0.46 0.043 258.12);
-  --accent: oklch(0.91 0.042 164.75);
+  --accent: oklch(0.88 0.04 262);
   --accent-foreground: oklch(0.18 0.046 252.54);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.885 0.019 255.04);
@@ -204,7 +205,7 @@
   }
 
   .gradient-text {
-    background: linear-gradient(135deg, oklch(0.984 0.003 247.858) 0%, oklch(0.91 0.042 164.75) 100%);
+    background: linear-gradient(135deg, oklch(0.984 0.003 247.858) 0%, oklch(0.72 0.07 252) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

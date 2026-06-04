@@ -27,7 +27,7 @@ const jobStats = [
           <span class="font-display">Unlock the Power of People</span>
         </div>
 
-        <h1 class="hero-title font-display text-6xl font-semibold leading-[1] md:text-8xl lg:text-[7rem]">
+        <h1 class="hero-title font-display text-6xl font-semibold leading-none md:text-8xl lg:text-[7rem]">
           <span class="gradient-text">Saint</span>HR
         </h1>
 
@@ -92,7 +92,7 @@ const jobStats = [
         </div>
 
         <p class="mt-4 flex items-center gap-2 text-xs font-medium text-primary">
-          <ShieldCheck class="size-4 shrink-0 text-emerald-600" />
+          <ShieldCheck class="size-4 shrink-0 text-primary/60" />
           Profiles, jobs, and employer matching in one place.
         </p>
       </div>
