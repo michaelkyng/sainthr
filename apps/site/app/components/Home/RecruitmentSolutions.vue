@@ -33,9 +33,9 @@ const listItems: Array<{
         <div class="absolute bottom-5 left-5 z-10 flex size-fit flex-col gap-2.5 rounded-xl bg-white/92 p-5 font-display text-primary shadow-xl backdrop-blur">
           <p class="text-5xl font-semibold">99%+</p>
           <p class="max-w-40 text-base">Quick talent acquisition</p>
-          <p class="flex items-center gap-1 text-xs font-medium text-green-500">
+          <p class="flex items-center gap-1 text-xs font-medium text-primary/60">
             +56%
-            <CircleArrowUp class="size-4 fill-green-500 text-white" />
+            <CircleArrowUp class="size-4 fill-primary/60 text-white" />
           </p>
         </div>
       </div>

@@ -20,6 +20,11 @@ const handleSearch = () => {
   if (searchLocation.value) params.location = searchLocation.value
   router.replace({ path: "/jobs", query: params })
 }
+
+const clearQuery = () => {
+  searchQuery.value = ""
+  handleSearch()
+}
 </script>
 
 <template>
@@ -27,7 +32,9 @@ const handleSearch = () => {
     <!-- Search bar -->
     <div class="border-b border-line bg-panel">
       <div class="mx-auto max-w-4xl px-5 py-8 lg:px-8">
-        <h1 class="mb-5 font-display text-2xl font-semibold text-ink">Browse Jobs</h1>
+        <h1 class="mb-5 font-display text-2xl font-semibold text-ink">
+          Browse Jobs
+        </h1>
         <div class="flex overflow-hidden rounded-full border border-line bg-paper shadow-[0_4px_20px_rgba(16,30,68,0.08)]">
           <div class="flex flex-1 items-center gap-3 px-5 py-3.5">
             <Search class="size-4 shrink-0 text-muted" />
@@ -38,7 +45,7 @@ const handleSearch = () => {
               type="search"
               @keyup.enter="handleSearch"
             >
-            <button v-if="searchQuery" class="text-muted transition hover:text-ink" type="button" @click="searchQuery = ''; handleSearch()">
+            <button v-if="searchQuery" class="text-muted transition hover:text-ink" type="button" @click="clearQuery">
               <X class="size-4" />
             </button>
           </div>
@@ -53,13 +60,9 @@ const handleSearch = () => {
               @keyup.enter="handleSearch"
             >
           </div>
-          <button
-            class="m-1.5 flex items-center gap-2 rounded-full bg-ink px-6 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-ink-2"
-            type="button"
-            @click="handleSearch"
-          >
+          <UiButton class="m-1.5 px-6" @click="handleSearch">
             Search
-          </button>
+          </UiButton>
         </div>
       </div>
     </div>
@@ -78,16 +81,16 @@ const handleSearch = () => {
           <Search class="size-7" />
         </div>
         <div>
-          <p class="font-display text-xl font-semibold text-ink">No roles found</p>
-          <p class="mt-1 text-sm text-muted">Try different keywords or browse all jobs</p>
+          <p class="font-display text-xl font-semibold text-ink">
+            No roles found
+          </p>
+          <p class="mt-1 text-sm text-muted">
+            Try different keywords or browse all jobs
+          </p>
         </div>
-        <button
-          class="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-ink-2"
-          type="button"
-          @click="searchQuery = ''; handleSearch()"
-        >
+        <UiButton class="px-5" @click="clearQuery">
           Browse all jobs
-        </button>
+        </UiButton>
       </div>
 
       <!-- Job list -->
@@ -108,27 +111,32 @@ const handleSearch = () => {
                 <h3 class="font-display text-lg font-semibold text-ink transition-colors group-hover:text-green">
                   {{ job.title }}
                 </h3>
-                <span v-if="job.matchScore" :class="['rounded-full px-2.5 py-0.5 text-xs font-semibold', job.accent]">
+                <UiBadge v-if="job.matchScore" :class="`px-2.5 py-0.5 ${job.accent}`">
                   {{ job.matchScore }}% match
-                </span>
+                </UiBadge>
               </div>
-              <p class="mt-0.5 text-sm text-muted">{{ job.company }} · {{ job.location }} · {{ job.type }}</p>
+              <p class="mt-0.5 text-sm text-muted">
+                {{ job.company }} · {{ job.location }} · {{ job.type }}
+              </p>
               <div class="mt-2 flex flex-wrap gap-1.5">
-                <span
+                <UiBadge
                   v-for="skill in job.skills.slice(0, 3)"
                   :key="skill"
-                  class="rounded-full border border-line bg-paper px-2.5 py-0.5 text-xs font-medium text-muted"
+                  variant="outline"
+                  class="bg-paper px-2.5 py-0.5 font-medium"
                 >
                   {{ skill }}
-                </span>
+                </UiBadge>
               </div>
             </div>
           </div>
 
           <div class="flex items-center justify-between gap-6 md:flex-col md:items-end md:justify-center">
             <div class="text-right">
-              <p class="font-display font-semibold text-ink">{{ job.salary }}</p>
-              <p class="mt-0.5 text-xs text-muted capitalize">
+              <p class="font-display font-semibold text-ink">
+                {{ job.salary }}
+              </p>
+              <p class="mt-0.5 text-xs capitalize text-muted">
                 {{ job.locationType }} · {{ job.postedDaysAgo === 0 ? "Today" : `${job.postedDaysAgo}d ago` }}
               </p>
             </div>

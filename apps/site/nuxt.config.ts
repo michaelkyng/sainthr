@@ -1,4 +1,5 @@
 export default defineNuxtConfig({
+  extends: ["../../layers/shared-utils"],
   compatibilityDate: "2026-05-18",
   srcDir: "app",
   css: ["~/assets/css/main.css"],

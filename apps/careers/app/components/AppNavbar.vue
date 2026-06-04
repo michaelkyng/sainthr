@@ -1,13 +1,82 @@
 <script setup lang="ts">
-import { ArrowUpRight, BriefcaseBusiness, Menu, X } from "@lucide/vue"
+import { ArrowUpRight, BriefcaseBusiness, Building2, Check, LayoutDashboard, LogOut, Menu, Settings, UserRound, X } from "@lucide/vue"
 
 defineOptions({ name: "CareersAppNavbar" })
 
 const config = useRuntimeConfig()
 const mainSiteUrl = computed(() => config.public.mainSiteUrl || "http://localhost:3000")
 const mobileOpen = ref(false)
-const { profile, initials } = useProfile()
-const { employer, companyInitials } = useCompany()
+const { profile } = storeToRefs(useProfileStore())
+const { employer } = storeToRefs(useEmployerStore())
+const {
+  isSignedIn,
+  roles,
+  activeRole,
+  setActiveRole,
+  homeFor,
+  fullName,
+  email,
+  user,
+  signOut,
+  isCandidateOnboarded,
+  isEmployerOnboarded,
+} = useSharedAuth()
+
+const showEmployerNav = computed(() => isSignedIn.value && activeRole.value === "employer")
+
+const ROLE_LABELS: Record<string, string> = { candidate: "Job Seeker", employer: "Employer" }
+
+const switchRole = async (r: "candidate" | "employer") => {
+  mobileOpen.value = false
+  setActiveRole(r)
+  await navigateTo(homeFor(r))
+}
+const employerDestination = computed(() => (
+  isEmployerOnboarded.value ? "/company/dashboard" : "/company/onboarding"
+))
+const candidateDestination = computed(() => (
+  isCandidateOnboarded.value ? "/profile" : "/onboarding"
+))
+
+const employerProfileDestination = computed(() => (
+  isEmployerOnboarded.value ? "/company/profile" : "/company/onboarding"
+))
+
+const employerSettingsDestination = computed(() => (
+  isEmployerOnboarded.value ? "/company/settings" : "/company/onboarding"
+))
+const candidateSettingsDestination = computed(() => (
+  isCandidateOnboarded.value ? "/settings" : "/onboarding"
+))
+
+const dashboardDestination = computed(() => (
+  showEmployerNav.value ? employerDestination.value : candidateDestination.value
+))
+const profileDestination = computed(() => (
+  showEmployerNav.value ? employerProfileDestination.value : candidateDestination.value
+))
+const settingsDestination = computed(() => (
+  showEmployerNav.value ? employerSettingsDestination.value : candidateSettingsDestination.value
+))
+
+const displayName = computed(() => fullName.value || profile.value.fullName || employer.value.fullName || "Your account")
+const displayEmail = computed(() => email.value || profile.value.email || employer.value.email)
+
+const userImageUrl = computed(() => user.value?.imageUrl ?? "")
+const avatarInitials = computed(() => {
+  const source = displayName.value && displayName.value !== "Your account" ? displayName.value : displayEmail.value
+  if (!source) return "?"
+  return source
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase() ?? "")
+    .join("") || source[0]?.toUpperCase() || "?"
+})
+
+const handleSignOut = async () => {
+  mobileOpen.value = false
+  await signOut.value()
+}
 </script>
 
 <template>
@@ -36,48 +105,76 @@ const { employer, companyInitials } = useCompany()
       </nav>
 
       <div class="hidden items-center gap-2 md:flex">
-        <!-- Logged in: show avatar -->
-        <template v-if="profile.isOnboarded">
-          <NuxtLink
-            to="/profile"
-            class="flex h-9 items-center gap-2 rounded-full border border-ink/15 bg-white/70 pl-2 pr-4 text-sm font-semibold text-ink shadow-xs backdrop-blur transition-all duration-200 hover:border-ink/30 hover:bg-paper"
-          >
-            <span class="flex size-6 items-center justify-center rounded-full bg-ink font-display text-[10px] font-semibold text-white">
-              {{ initials }}
-            </span>
-            My Profile
-          </NuxtLink>
+        <template v-if="!isSignedIn">
+          <UiButton as-child variant="secondary" size="sm" class="h-9 border-ink/15 bg-white/70 px-5">
+            <NuxtLink to="/auth/login">
+              Sign in
+            </NuxtLink>
+          </UiButton>
+          <UiButton as-child size="sm" class="h-9 px-5 shadow-[0_18px_45px_rgba(16,30,68,0.22)]">
+            <NuxtLink to="/auth/signup?role=employer">
+              Post a job
+              <ArrowUpRight class="size-3.5" />
+            </NuxtLink>
+          </UiButton>
         </template>
-        <!-- Guest -->
-        <template v-else>
-          <NuxtLink
-            to="/auth/login"
-            class="inline-flex h-9 items-center rounded-full border border-ink/15 bg-white/70 px-5 text-sm font-semibold text-ink shadow-xs backdrop-blur transition-all duration-200 hover:border-ink/30 hover:bg-paper"
-          >
-            Sign in
-          </NuxtLink>
-        </template>
-        <!-- Employer: go to dashboard -->
-        <template v-if="employer.isOnboarded">
-          <NuxtLink
-            to="/company/dashboard"
-            class="flex h-9 items-center gap-2 rounded-full border border-ink/15 bg-white/70 pl-2 pr-4 text-sm font-semibold text-ink shadow-xs backdrop-blur transition-all duration-200 hover:border-ink/30 hover:bg-paper"
-          >
-            <span class="flex size-6 items-center justify-center rounded-lg bg-ink font-display text-[10px] font-bold text-white">
-              {{ companyInitials }}
-            </span>
-            Dashboard
-          </NuxtLink>
-        </template>
-        <!-- Guest: employer signup via unified signup page -->
-        <template v-else>
-          <NuxtLink
-            to="/auth/signup?role=employer"
-            class="inline-flex h-9 items-center gap-1.5 rounded-full bg-ink px-5 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(16,30,68,0.22)] transition-all duration-200 hover:bg-ink-2"
-          >
-            Post a job
-            <ArrowUpRight class="size-3.5" />
-          </NuxtLink>
+
+        <template v-if="isSignedIn">
+          <UiDropdownMenu>
+            <template #default="{ open, toggle }">
+              <button
+                type="button"
+                aria-label="Open account menu"
+                :aria-expanded="open"
+                class="rounded-full shadow-xs ring-1 ring-ink/10 transition hover:ring-ink/30 focus-visible:ring-2 focus-visible:ring-ink/40 focus-visible:outline-none"
+                @click="toggle"
+              >
+                <UiAvatar class="size-10">
+                  <UiAvatarImage v-if="userImageUrl" :src="userImageUrl" :alt="displayName" />
+                  <UiAvatarFallback>{{ avatarInitials }}</UiAvatarFallback>
+                </UiAvatar>
+              </button>
+              <UiDropdownMenuContent v-if="open" align="end" class="min-w-56">
+                <div class="px-3 py-2">
+                  <p class="truncate text-sm font-semibold text-ink">{{ displayName }}</p>
+                  <p v-if="displayEmail" class="truncate text-xs text-ink/55">{{ displayEmail }}</p>
+                </div>
+                <UiDropdownMenuSeparator />
+                <UiDropdownMenuItem @click="navigateTo(dashboardDestination)">
+                  <LayoutDashboard class="size-4 text-ink/60" />
+                  Dashboard
+                </UiDropdownMenuItem>
+                <UiDropdownMenuItem @click="navigateTo(profileDestination)">
+                  <UserRound class="size-4 text-ink/60" />
+                  Profile
+                </UiDropdownMenuItem>
+                <UiDropdownMenuItem @click="navigateTo(settingsDestination)">
+                  <Settings class="size-4 text-ink/60" />
+                  Settings
+                </UiDropdownMenuItem>
+                <template v-if="roles.length > 1">
+                  <UiDropdownMenuSeparator />
+                  <p class="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink/40">
+                    Switch role
+                  </p>
+                  <UiDropdownMenuItem
+                    v-for="r in roles"
+                    :key="r"
+                    @click="switchRole(r)"
+                  >
+                    <component :is="r === 'employer' ? Building2 : UserRound" class="size-4 text-ink/60" />
+                    {{ ROLE_LABELS[r] }}
+                    <Check v-if="activeRole === r" class="ml-auto size-3.5 text-green" />
+                  </UiDropdownMenuItem>
+                </template>
+                <UiDropdownMenuSeparator />
+                <UiDropdownMenuItem :destructive="true" @click="handleSignOut">
+                  <LogOut class="size-4" />
+                  Logout
+                </UiDropdownMenuItem>
+              </UiDropdownMenuContent>
+            </template>
+          </UiDropdownMenu>
         </template>
       </div>
 
@@ -120,34 +217,83 @@ const { employer, companyInitials } = useCompany()
               SaintHR.com <ArrowUpRight class="size-4 opacity-50" />
             </a>
           </nav>
-          <div class="mt-8 grid gap-3">
+
+          <div v-if="isSignedIn" class="mt-8 flex flex-col gap-1">
+            <div class="flex items-center gap-3 px-4 py-3">
+              <UiAvatar class="size-10">
+                <UiAvatarImage v-if="userImageUrl" :src="userImageUrl" :alt="displayName" />
+                <UiAvatarFallback>{{ avatarInitials }}</UiAvatarFallback>
+              </UiAvatar>
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-ink">{{ displayName }}</p>
+                <p v-if="displayEmail" class="truncate text-xs text-ink/55">{{ displayEmail }}</p>
+              </div>
+            </div>
             <NuxtLink
-              :to="employer.isOnboarded ? '/company/dashboard' : '/auth/signup?role=employer'"
-              class="flex items-center justify-center gap-1.5 rounded-full bg-ink py-3.5 text-sm font-semibold text-white"
+              :to="dashboardDestination"
+              class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-ink transition hover:bg-paper"
               @click="mobileOpen = false"
             >
-              {{ employer.isOnboarded ? "Company Dashboard" : "Post a job" }}
-              <ArrowUpRight class="size-4" />
+              <LayoutDashboard class="size-4 text-ink/60" /> Dashboard
             </NuxtLink>
             <NuxtLink
-              v-if="profile.isOnboarded"
-              to="/profile"
-              class="flex items-center justify-center gap-2 rounded-full border border-ink/20 py-3.5 text-sm font-semibold text-ink transition hover:bg-paper"
+              :to="profileDestination"
+              class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-ink transition hover:bg-paper"
               @click="mobileOpen = false"
             >
-              <span class="flex size-5 items-center justify-center rounded-full bg-ink font-display text-[9px] font-semibold text-white">
-                {{ initials }}
-              </span>
-              My Profile
+              <UserRound class="size-4 text-ink/60" /> Profile
             </NuxtLink>
             <NuxtLink
-              v-else
-              to="/auth/login"
-              class="flex items-center justify-center rounded-full border border-ink/20 py-3.5 text-sm font-semibold text-ink transition hover:bg-paper"
+              :to="settingsDestination"
+              class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-ink transition hover:bg-paper"
               @click="mobileOpen = false"
             >
-              Sign in
+              <Settings class="size-4 text-ink/60" /> Settings
             </NuxtLink>
+            <template v-if="roles.length > 1">
+              <div class="my-1 border-t border-line" />
+              <p class="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink/40">
+                Switch view
+              </p>
+              <button
+                v-for="r in roles"
+                :key="r"
+                type="button"
+                class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-ink transition hover:bg-paper"
+                @click="switchRole(r)"
+              >
+                <component :is="r === 'employer' ? Building2 : UserRound" class="size-4 text-ink/60" />
+                {{ ROLE_LABELS[r] }}
+                <Check v-if="activeRole === r" class="ml-auto size-3.5 text-green" />
+              </button>
+            </template>
+            <button
+              type="button"
+              class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-coral transition hover:bg-coral/10"
+              @click="handleSignOut"
+            >
+              <LogOut class="size-4" /> Logout
+            </button>
+          </div>
+
+          <div v-else class="mt-8 grid gap-3">
+            <UiButton as-child size="lg" class="w-full" @click="mobileOpen = false">
+              <NuxtLink to="/auth/signup?role=employer">
+                Post a job
+                <ArrowUpRight class="size-4" />
+              </NuxtLink>
+            </UiButton>
+            <UiButton
+              as-child
+              variant="secondary"
+              size="lg"
+              class="w-full border-ink/20"
+              @click="mobileOpen = false"
+            >
+              <NuxtLink to="/auth/login">
+                Sign in
+              </NuxtLink>
+            </UiButton>
           </div>
         </aside>
       </Transition>

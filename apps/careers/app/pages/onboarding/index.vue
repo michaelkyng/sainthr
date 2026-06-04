@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { ArrowLeft, ArrowRight, CheckCircle2, CloudUpload, FileText, X } from "@lucide/vue"
+import { ArrowLeft, ArrowRight, CheckCircle2, CloudUpload, FileText, Search, X } from "@lucide/vue"
+import { ALL_SKILLS } from "~/utils/skills"
 
 defineOptions({ name: "CareersOnboardingPage" })
-definePageMeta({ layout: "onboarding" })
+definePageMeta({ layout: "onboarding", middleware: ["candidate", "not-onboarded"] })
 
 useHead({ title: "Set up your profile – SaintHR" })
 
 const router = useRouter()
-const { profile } = useProfile()
+const { profile } = storeToRefs(useProfileStore())
+const { markOnboarded } = useSharedAuth()
 
 const TOTAL_STEPS = 3
 const step = ref(1)
@@ -18,7 +20,6 @@ const STEP_META = [
   { label: "Your resume", desc: "Upload your CV and add your online profiles." },
 ]
 
-// ── Step 1 ──────────────────────────────────────────────
 const jobTitle = ref(profile.value.jobTitle || "")
 const experience = ref(profile.value.experience || "")
 const location = ref(profile.value.location || "")
@@ -26,13 +27,6 @@ const bio = ref(profile.value.bio || "")
 
 const experienceOptions = ["< 1 year", "1–3 years", "3–5 years", "5–10 years", "10+ years"]
 
-// ── Step 2 ──────────────────────────────────────────────
-const ALL_SKILLS = [
-  "Recruitment", "Payroll", "HRIS", "Compliance", "L&D",
-  "Employee Relations", "Talent Management", "Performance Mgmt",
-  "HR Analytics", "Compensation", "Onboarding", "Policy Dev",
-  "Org Design", "D&I", "Change Management", "Workforce Planning",
-]
 const JOB_TYPES = ["Full-time", "Part-time", "Contract"]
 const ARRANGEMENTS = ["Remote", "Hybrid", "On-site"]
 
@@ -40,20 +34,25 @@ const selectedSkills = ref<string[]>([...profile.value.skills])
 const selectedJobTypes = ref<string[]>([...profile.value.preferredJobTypes])
 const selectedArrangements = ref<string[]>([...profile.value.preferredArrangements])
 
-const toggleSkill = (s: string) => {
-  const i = selectedSkills.value.indexOf(s)
-  i >= 0 ? selectedSkills.value.splice(i, 1) : selectedSkills.value.push(s)
+const skillSearch = ref("")
+const filteredSkills = computed(() => {
+  const q = skillSearch.value.trim().toLowerCase()
+  if (!q) return ALL_SKILLS
+  return ALL_SKILLS.filter(
+    s => s.toLowerCase().includes(q) || selectedSkills.value.includes(s),
+  )
+})
+
+const setSkills = (v: unknown) => {
+  selectedSkills.value = Array.isArray(v) ? (v as string[]) : []
 }
-const toggleJobType = (s: string) => {
-  const i = selectedJobTypes.value.indexOf(s)
-  i >= 0 ? selectedJobTypes.value.splice(i, 1) : selectedJobTypes.value.push(s)
+const setJobTypes = (v: unknown) => {
+  selectedJobTypes.value = Array.isArray(v) ? (v as string[]) : []
 }
-const toggleArrangement = (s: string) => {
-  const i = selectedArrangements.value.indexOf(s)
-  i >= 0 ? selectedArrangements.value.splice(i, 1) : selectedArrangements.value.push(s)
+const setArrangements = (v: unknown) => {
+  selectedArrangements.value = Array.isArray(v) ? (v as string[]) : []
 }
 
-// ── Step 3 ──────────────────────────────────────────────
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const resumeFile = ref<File | null>(null)
 const isDragging = ref(false)
@@ -85,7 +84,6 @@ const handleFileChange = (e: Event) => {
   handleFileSelect((e.target as HTMLInputElement).files?.[0] ?? null)
 }
 
-// ── Navigation ──────────────────────────────────────────
 const isDone = computed(() => step.value > TOTAL_STEPS)
 
 const canContinue = computed(() => {
@@ -94,7 +92,7 @@ const canContinue = computed(() => {
   return true
 })
 
-const saveStep = () => {
+const saveStep = async () => {
   if (step.value === 1) {
     Object.assign(profile.value, {
       jobTitle: jobTitle.value.trim(),
@@ -116,12 +114,12 @@ const saveStep = () => {
       profile.value.resumeSize = formatSize(resumeFile.value.size)
     }
     profile.value.linkedinUrl = linkedinUrl.value.trim()
-    profile.value.isOnboarded = true
+    await markOnboarded("candidate")
   }
 }
 
-const goNext = () => {
-  saveStep()
+const goNext = async () => {
+  await saveStep()
   step.value++
 }
 
@@ -129,8 +127,8 @@ const goBack = () => {
   step.value--
 }
 
-const skipStep = () => {
-  if (step.value === TOTAL_STEPS) profile.value.isOnboarded = true
+const skipStep = async () => {
+  if (step.value === TOTAL_STEPS) await markOnboarded("candidate")
   step.value++
 }
 </script>
@@ -138,18 +136,16 @@ const skipStep = () => {
 <template>
   <div class="w-full max-w-lg">
     <Transition name="step" mode="out-in">
-      <!-- ── Completion screen ───────────────────────────── -->
-      <div
-        v-if="isDone"
-        key="done"
-        class="w-full rounded-3xl border border-line/50 bg-white p-10 text-center shadow-[0_24px_80px_rgba(16,30,68,0.14)]"
-      >
+      <!-- Completion screen -->
+      <UiCard v-if="isDone" key="done" class="w-full p-10 text-center">
         <div class="mb-5 flex justify-center">
           <div class="flex size-20 items-center justify-center rounded-full bg-mint">
             <CheckCircle2 class="size-10 text-green" />
           </div>
         </div>
-        <h2 class="font-display text-2xl font-semibold text-ink">You're all set!</h2>
+        <UiCardTitle class="text-2xl">
+          You're all set!
+        </UiCardTitle>
         <p class="mx-auto mt-2 max-w-xs text-sm leading-6 text-muted">
           Your profile is live. Start exploring roles that match your background.
         </p>
@@ -170,102 +166,80 @@ const skipStep = () => {
         </ul>
 
         <div class="mt-8 flex flex-col gap-3">
-          <button
-            class="flex w-full items-center justify-center gap-2 rounded-full bg-ink px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-ink-2"
-            type="button"
-            @click="router.push('/profile')"
-          >
+          <UiButton size="lg" class="w-full" @click="router.push('/profile')">
             View my profile
-          </button>
+          </UiButton>
           <NuxtLink
             to="/jobs"
-            class="flex w-full items-center justify-center gap-2 rounded-full border border-line px-6 py-3.5 text-sm font-semibold text-ink transition hover:border-ink/30 hover:bg-paper"
+            class="inline-flex w-full items-center justify-center gap-2 rounded-full border border-line bg-white px-6 py-3.5 text-sm font-semibold text-ink transition hover:border-ink/30 hover:bg-paper"
           >
             Browse jobs
           </NuxtLink>
         </div>
-      </div>
+      </UiCard>
 
-      <!-- ── Step card ──────────────────────────────────── -->
-      <div
-        v-else
-        :key="step"
-        class="w-full overflow-hidden rounded-3xl border border-line/50 bg-white shadow-[0_24px_80px_rgba(16,30,68,0.14)]"
-      >
-        <!-- Progress + header -->
-        <div class="border-b border-line px-8 pb-6 pt-8">
-          <div class="mb-5 flex gap-1.5">
-            <div
-              v-for="i in TOTAL_STEPS"
-              :key="i"
-              :class="[
-                'h-1 flex-1 rounded-full transition-all duration-500',
-                i < step ? 'bg-green' : i === step ? 'bg-ink' : 'bg-line',
-              ]"
-            />
-          </div>
-          <p class="mb-1 text-xs font-semibold text-muted">Step {{ step }} of {{ TOTAL_STEPS }}</p>
-          <h2 class="font-display text-xl font-semibold text-ink">{{ STEP_META[step - 1].label }}</h2>
-          <p class="mt-0.5 text-sm text-muted">{{ STEP_META[step - 1].desc }}</p>
-        </div>
+      <!-- Step card -->
+      <UiCard v-else :key="step" class="w-full overflow-hidden">
+        <UiCardHeader>
+          <UiStepper :total="TOTAL_STEPS" :current="step" class="mb-5" />
+          <p class="mb-1 text-xs font-semibold text-muted">
+            Step {{ step }} of {{ TOTAL_STEPS }}
+          </p>
+          <UiCardTitle>{{ STEP_META[step - 1]?.label }}</UiCardTitle>
+          <UiCardDescription>{{ STEP_META[step - 1]?.desc }}</UiCardDescription>
+        </UiCardHeader>
 
-        <!-- Step content -->
-        <div class="px-8 py-7">
+        <UiCardContent>
           <!-- Step 1: About you -->
           <div v-if="step === 1" class="flex flex-col gap-4">
-            <label class="flex flex-col gap-1.5">
-              <span class="text-xs font-semibold text-ink">
-                Current or target job title
-                <span class="text-coral">*</span>
-              </span>
-              <input
+            <div class="flex flex-col gap-1.5">
+              <UiLabel for="job-title" required>Current or target job title</UiLabel>
+              <UiInput
+                id="job-title"
                 v-model="jobTitle"
-                class="rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink outline-none placeholder:text-muted transition-colors focus:border-ink/40"
                 placeholder="e.g. HR Business Partner"
-                type="text"
-              >
-            </label>
+              />
+            </div>
 
-            <label class="flex flex-col gap-1.5">
-              <span class="text-xs font-semibold text-ink">
-                Years of experience
-                <span class="text-coral">*</span>
-              </span>
-              <select
-                v-model="experience"
-                class="appearance-none rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink outline-none transition-colors focus:border-ink/40"
-              >
-                <option value="" disabled>Select experience level</option>
-                <option v-for="opt in experienceOptions" :key="opt" :value="opt">{{ opt }}</option>
-              </select>
-            </label>
+            <div class="flex flex-col gap-1.5">
+              <UiLabel for="experience" required>Years of experience</UiLabel>
+              <UiSelect v-model="experience">
+                <UiSelectTrigger id="experience">
+                  <UiSelectValue placeholder="Select experience level" />
+                </UiSelectTrigger>
+                <UiSelectContent>
+                  <UiSelectItem v-for="opt in experienceOptions" :key="opt" :value="opt">
+                    {{ opt }}
+                  </UiSelectItem>
+                </UiSelectContent>
+              </UiSelect>
+            </div>
 
-            <label class="flex flex-col gap-1.5">
-              <span class="text-xs font-semibold text-ink">Location</span>
-              <input
+            <div class="flex flex-col gap-1.5">
+              <UiLabel for="location">Location</UiLabel>
+              <UiInput
+                id="location"
                 v-model="location"
-                class="rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink outline-none placeholder:text-muted transition-colors focus:border-ink/40"
                 placeholder="e.g. Lagos, Nigeria"
-                type="text"
-              >
-            </label>
+              />
+            </div>
 
-            <label class="flex flex-col gap-1.5">
+            <div class="flex flex-col gap-1.5">
               <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-ink">
+                <UiLabel for="bio">
                   Short bio
                   <span class="font-normal text-muted">(optional)</span>
-                </span>
+                </UiLabel>
                 <span class="text-xs text-muted">{{ bio.length }}/200</span>
               </div>
-              <textarea
+              <UiTextarea
+                id="bio"
                 v-model="bio"
-                class="resize-none rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink outline-none placeholder:text-muted transition-colors focus:border-ink/40"
                 placeholder="Brief summary of your HR background and what you're looking for..."
-                rows="3"
-                maxlength="200"
+                :rows="3"
+                :maxlength="200"
               />
-            </label>
+            </div>
           </div>
 
           <!-- Step 2: Expertise -->
@@ -275,65 +249,88 @@ const skipStep = () => {
                 Skills
                 <span class="font-normal text-muted">(select all that apply)</span>
               </p>
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="skill in ALL_SKILLS"
-                  :key="skill"
-                  :class="[
-                    'rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200',
-                    selectedSkills.includes(skill)
-                      ? 'border-green bg-mint text-green'
-                      : 'border-line bg-paper text-muted hover:border-ink/30 hover:text-ink',
-                  ]"
-                  type="button"
-                  @click="toggleSkill(skill)"
+
+              <div class="mb-3 flex items-center gap-2 rounded-xl border border-line bg-paper px-3.5 py-2.5 transition-colors focus-within:border-ink/40">
+                <Search class="size-4 shrink-0 text-muted" />
+                <input
+                  v-model="skillSearch"
+                  type="search"
+                  placeholder="Search skills (e.g. Figma, Recruitment, Python)"
+                  class="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted"
                 >
-                  {{ skill }}
+                <button
+                  v-if="skillSearch"
+                  type="button"
+                  aria-label="Clear search"
+                  class="text-muted transition hover:text-ink"
+                  @click="skillSearch = ''"
+                >
+                  <X class="size-4" />
                 </button>
               </div>
+
+              <UiToggleGroup
+                v-if="filteredSkills.length"
+                type="multiple"
+                :model-value="selectedSkills"
+                @update:model-value="setSkills"
+              >
+                <UiToggleGroupItem
+                  v-for="skill in filteredSkills"
+                  :key="skill"
+                  :value="skill"
+                  variant="green"
+                  size="sm"
+                >
+                  {{ skill }}
+                </UiToggleGroupItem>
+              </UiToggleGroup>
+              <p v-else class="mt-2 text-xs text-muted">
+                No skills match "{{ skillSearch }}".
+              </p>
+
               <p v-if="selectedSkills.length === 0" class="mt-2 text-xs text-muted">
                 Select at least one skill to continue.
+              </p>
+              <p v-else class="mt-2 text-xs text-muted">
+                {{ selectedSkills.length }} selected
               </p>
             </div>
 
             <div>
               <p class="mb-3 text-xs font-semibold text-ink">Preferred job type</p>
-              <div class="flex flex-wrap gap-2">
-                <button
+              <UiToggleGroup
+                type="multiple"
+                :model-value="selectedJobTypes"
+                @update:model-value="setJobTypes"
+              >
+                <UiToggleGroupItem
                   v-for="type in JOB_TYPES"
                   :key="type"
-                  :class="[
-                    'rounded-full border px-4 py-2 text-xs font-semibold transition-all duration-200',
-                    selectedJobTypes.includes(type)
-                      ? 'border-ink bg-ink text-white'
-                      : 'border-line bg-paper text-muted hover:border-ink/30 hover:text-ink',
-                  ]"
-                  type="button"
-                  @click="toggleJobType(type)"
+                  :value="type"
+                  variant="ink"
                 >
                   {{ type }}
-                </button>
-              </div>
+                </UiToggleGroupItem>
+              </UiToggleGroup>
             </div>
 
             <div>
               <p class="mb-3 text-xs font-semibold text-ink">Preferred work arrangement</p>
-              <div class="flex flex-wrap gap-2">
-                <button
+              <UiToggleGroup
+                type="multiple"
+                :model-value="selectedArrangements"
+                @update:model-value="setArrangements"
+              >
+                <UiToggleGroupItem
                   v-for="arr in ARRANGEMENTS"
                   :key="arr"
-                  :class="[
-                    'rounded-full border px-4 py-2 text-xs font-semibold transition-all duration-200',
-                    selectedArrangements.includes(arr)
-                      ? 'border-green bg-mint text-green'
-                      : 'border-line bg-paper text-muted hover:border-ink/30 hover:text-ink',
-                  ]"
-                  type="button"
-                  @click="toggleArrangement(arr)"
+                  :value="arr"
+                  variant="green"
                 >
                   {{ arr }}
-                </button>
-              </div>
+                </UiToggleGroupItem>
+              </UiToggleGroup>
             </div>
           </div>
 
@@ -371,7 +368,7 @@ const skipStep = () => {
                   'flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-10 text-center transition-all duration-200',
                   isDragging
                     ? 'border-ink bg-ink/5'
-                    : 'border-line bg-paper hover:border-ink/40 hover:bg-ink/[0.02]',
+                    : 'border-line bg-paper hover:border-ink/40 hover:bg-ink/2',
                 ]"
                 @dragover.prevent="isDragging = true"
                 @dragleave.prevent="isDragging = false"
@@ -399,63 +396,54 @@ const skipStep = () => {
               >
             </div>
 
-            <label class="flex flex-col gap-1.5">
-              <span class="text-xs font-semibold text-ink">
+            <div class="flex flex-col gap-1.5">
+              <UiLabel for="linkedin">
                 LinkedIn URL
                 <span class="font-normal text-muted">(optional)</span>
-              </span>
-              <input
+              </UiLabel>
+              <UiInput
+                id="linkedin"
                 v-model="linkedinUrl"
-                class="rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink outline-none placeholder:text-muted transition-colors focus:border-ink/40"
-                placeholder="https://linkedin.com/in/yourprofile"
                 type="url"
-              >
-            </label>
+                placeholder="https://linkedin.com/in/yourprofile"
+              />
+            </div>
 
             <p class="text-xs leading-5 text-muted">
               You can always update your resume later from your profile page.
             </p>
           </div>
-        </div>
+        </UiCardContent>
 
-        <!-- Navigation -->
-        <div class="flex items-center justify-between border-t border-line px-8 py-5">
-          <button
+        <UiCardFooter>
+          <UiButton
             v-if="step > 1"
-            class="flex items-center gap-1.5 text-sm font-semibold text-muted transition hover:text-ink"
-            type="button"
+            variant="ghost"
+            size="sm"
+            class="px-0"
             @click="goBack"
           >
             <ArrowLeft class="size-4" /> Back
-          </button>
+          </UiButton>
           <span v-else />
 
           <div class="flex items-center gap-3">
-            <button
+            <UiButton
               v-if="step === TOTAL_STEPS"
-              class="text-sm font-semibold text-muted transition hover:text-ink"
-              type="button"
+              variant="ghost"
+              size="sm"
+              class="px-0"
               @click="skipStep"
             >
               Skip
-            </button>
-            <button
-              :class="[
-                'flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-200',
-                canContinue
-                  ? 'bg-ink text-white hover:bg-ink-2'
-                  : 'cursor-not-allowed bg-line text-muted',
-              ]"
-              type="button"
-              :disabled="!canContinue"
-              @click="goNext"
-            >
+            </UiButton>
+            <UiButton :disabled="!canContinue" @click="goNext">
               {{ step === TOTAL_STEPS ? "Complete" : "Continue" }}
               <ArrowRight v-if="step < TOTAL_STEPS" class="size-4" />
-            </button>
+            </UiButton>
           </div>
-        </div>
-      </div>
+        </UiCardFooter>
+      </UiCard>
     </Transition>
   </div>
 </template>
